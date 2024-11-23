@@ -1,0 +1,640 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // ใช้สำหรับจัดรูปแบบเวลา
+import 'package:google_fonts/google_fonts.dart';
+import 'package:todoapp/theme/app_theme.dart';
+
+class AddTask extends StatefulWidget {
+  final String initialTitle;
+  final String initialSubtitle;
+  final Function(Map<String, dynamic>) onSave;
+
+  const AddTask({
+    super.key,
+    required this.initialTitle,
+    required this.initialSubtitle,
+    required this.onSave,
+  });
+
+  @override
+  _AddTaskState createState() => _AddTaskState();
+}
+
+class _AddTaskState extends State<AddTask> {
+  late String title;
+  late String subtitle;
+  late IconData? selectedIcon;
+  late DateTime startDate;
+  late DateTime endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    title = widget.initialTitle;
+    subtitle = widget.initialSubtitle;
+    selectedIcon = Icons.check; // Default icon
+    startDate = DateTime.now();
+    endDate = DateTime.now().add(const Duration(days: 1));
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isStartDate ? startDate : endDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          startDate = picked;
+        } else {
+          // เช็คว่าเลือกวันสิ้นสุดจะต้องไม่เลือกวันก่อนวันเริ่มต้น
+          if (picked.isAfter(startDate) || picked.isAtSameMomentAs(startDate)) {
+            endDate = picked;
+          } else {
+            // หากเลือกวันก่อนวันเริ่มต้น ให้แสดง snackbar แจ้งเตือน
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('End date must be on or after the start date.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+          children: [
+            AppTheme.background(context), // ใช้พื้นหลังที่กำหนดไว้ใน AppTheme
+            Center(
+              child: Card(
+                elevation: 8,
+                margin: const EdgeInsets.all(20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 20),
+                        // Align the "New Task" title to the left
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'NEW TASK',
+                            style: GoogleFonts.ibmPlexSansThai(
+                              textStyle: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFec5091),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Title',
+                            filled: true,
+                            fillColor: const Color(0xFFe8e1e6), // สีพื้นหลัง
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(10), // ความโค้งของกรอบ
+                              borderSide: BorderSide.none, // ไม่มีเส้นขอบ
+                            ),
+                          ),
+                          onChanged: (value) {
+                            title = value;
+                          },
+                        ),
+                        const SizedBox(height: 25),
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Subtitle',
+                            filled: true,
+                            fillColor:
+                                const Color(0xFFe8e1e6), // สีพื้นหลังเหมือนกัน
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                  10), // ความโค้งของกรอบเหมือนกัน
+                              borderSide: BorderSide.none, // ไม่มีเส้นขอบ
+                            ),
+                          ),
+                          onChanged: (value) {
+                            subtitle = value;
+                          },
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        // Use Row for Start and End Date fields
+                        Row(
+                          children: [
+                            // Start date
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Start'),
+                                  GestureDetector(
+                                    onTap: () => _selectDate(context, true),
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                            0xFFe8e1e6), // Background color
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0),
+                                        child: Text(
+                                          DateFormat('yyyy-MM-dd')
+                                              .format(startDate),
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                                width: 10), // Add spacing between Start and End
+                            // End date
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('End'),
+                                  GestureDetector(
+                                    onTap: () => _selectDate(context, false),
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                            0xFFe8e1e6), // Background color
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0),
+                                        child: Text(
+                                          DateFormat('yyyy-MM-dd')
+                                              .format(endDate),
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 25),
+                        // Icon Selection
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Icon'),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildIconButton(Icons.book),
+                                _buildIconButton(Icons.palette),
+                                _buildIconButton(Icons.attach_money),
+                                _buildIconButton(Icons.terrain),
+                                _buildIconButton(Icons.favorite),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 25), // ระยะห่างด้านล่าง
+                        ElevatedButton(
+                          onPressed: () {
+                            if (title.isNotEmpty && subtitle.isNotEmpty) {
+                              final newTask = {
+                                'title': title,
+                                'subtitle': subtitle,
+                                'icon': selectedIcon?.codePoint,
+                                'startDate':
+                                    DateFormat('yyyy-MM-dd').format(startDate),
+                                'endDate':
+                                    DateFormat('yyyy-MM-dd').format(endDate),
+                                'createdAt': DateFormat('yyyy-MM-dd HH:mm:ss')
+                                    .format(DateTime.now().toLocal()),
+                              };
+                              widget.onSave(newTask);
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity,
+                                  50), // ทำให้ปุ่มเต็มแนวซ้ายขวา
+                              backgroundColor: const Color(0xFFec5091)),
+                          child: Text(
+                            'Create Task',
+                            style: GoogleFonts.ibmPlexSansThai(
+                              textStyle: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20), // ระยะห่างด้านล่าง
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // ปุ่มย้อนกลับ
+            Positioned(
+              top: 16,
+              left: 16,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context); // ฟังก์ชันย้อนกลับ
+                },
+              ),
+            ),
+          ],
+        ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedIcon = icon; // Update the selected icon
+        });
+      },
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: selectedIcon == icon
+              ? const Color(0xFFec5091)
+                  .withOpacity(0.5) // Highlight color when selected
+              : Colors.white, // Default color
+        ),
+        child: Icon(
+          icon,
+          color: selectedIcon == icon
+              ? Colors.white
+              : const Color(0xFFec5091), // Icon color based on selection
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:todoapp/widgets/task_card_widget.dart';
+import 'package:todoapp/pages/calendar_screen.dart';
+import 'package:todoapp/pages/task_detail_screen.dart';
+import 'package:todoapp/services/service.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'addTask_screen.dart';
+import 'package:todoapp/theme/app_theme.dart';
+
+class TaskListScreen extends StatefulWidget {
+  const TaskListScreen({super.key});
+
+  @override
+  State<TaskListScreen> createState() => _TaskListScreenState();
+}
+
+class _TaskListScreenState extends State<TaskListScreen> {
+  final TaskService _taskService = TaskService();
+
+  @override
+  Widget build(BuildContext context) {
+    final String currentDate =
+        DateFormat('yyyy\nMMMM d').format(DateTime.now());
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          AppTheme.background(context),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 50),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      currentDate,
+                      style: GoogleFonts.ibmPlexSansThai(
+                        fontSize: 36,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StreamBuilder<List<Map<String, dynamic>>>(
+                              stream: _taskService.fetchTasksStream(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
+                                if (snapshot.hasError) {
+                                  return Center(
+                                      child: Text('Error: ${snapshot.error}'));
+                                }
+
+                                final tasks = snapshot.data ?? [];
+                                return CalendarTaskScreen(
+                                  tasks: tasks,
+                                  selectedDate: DateTime.now(),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        child: const Icon(
+                          Icons.calendar_today,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                Text(
+                  'Today',
+                  style: GoogleFonts.ibmPlexSansThai(
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                // ใช้ StreamBuilder สำหรับ Pending Tasks
+                Expanded(
+                  child: StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _taskService.fetchTasksStream(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+
+                      final tasks = snapshot.data ?? [];
+                      final pendingTasks = tasks
+                          .where((task) => task['isCompleted'] == false)
+                          .toList();
+
+                      return ListView.builder(
+                        itemCount: pendingTasks.length,
+                        itemBuilder: (context, index) {
+                          final task = pendingTasks[index];
+
+                          return Slidable(
+                            key: Key(task['title']),
+                            endActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              extentRatio: 0.25,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) async {
+                                    await _taskService.deleteTask(task['id']);
+                                  },
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  icon: FontAwesomeIcons.trash,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ],
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TaskDetailScreen(
+                                      taskId: task['id'],
+                                      title: task['title'],
+                                      subtitle: task['subtitle'],
+                                      isCompleted: task['isCompleted'],
+                                      startDate:
+                                          task['startDate'],
+                                      endDate: task['endDate'],
+                                      createdAt: task['date'],
+                                      icon: task['icon'] is int
+                                          ? task['icon']
+                                          : Icons.help
+                                              .codePoint, // ตรวจสอบว่า icon เป็น int
+                                    ),
+                                  ),
+                                );
+                                print(
+                                    "Sending icon: ${task['icon']}"); // เพิ่มบรรทัดนี้เพื่อตรวจสอบค่า
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                child: TaskCard(
+                                  title: task['title'],
+                                  subtitle: task['subtitle'],
+                                  isCompleted: task['isCompleted'],
+                                  icon: IconData(task['icon'],
+                                      fontFamily: 'MaterialIcons'),
+                                  onToggleCompletion: (completed) async {
+                                    await _taskService.updateTaskCompletion(
+                                        task['id'], completed);
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+                Text(
+                  'Complete Today',
+                  style: GoogleFonts.ibmPlexSansThai(
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                // ใช้ StreamBuilder สำหรับ Completed Tasks
+                Expanded(
+                  child: StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _taskService.fetchTasksStream(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+
+                      final tasks = snapshot.data ?? [];
+                      final completedTasks = tasks
+                          .where((task) => task['isCompleted'] == true)
+                          .toList();
+
+                      return ListView.builder(
+                        itemCount: completedTasks.length,
+                        itemBuilder: (context, index) {
+                          final task = completedTasks[index];
+
+                          return Slidable(
+                            key: Key(task['title']),
+                            endActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              extentRatio: 0.25,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) async {
+                                    await _taskService.deleteTask(task['id']);
+                                  },
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  icon: FontAwesomeIcons.trash,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ],
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TaskDetailScreen(
+                                      taskId: task['id'],
+                                      title: task['title'],
+                                      subtitle: task['subtitle'],
+                                      isCompleted: task['isCompleted'],
+                                      startDate:
+                                          task['startDate'],
+                                      endDate: task['endDate'],
+                                      createdAt: task['date'],
+                                      icon: task[
+                                          'icon'], // ส่งค่าจากฐานข้อมูลไปยัง TaskDetailScreen
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                child: TaskCard(
+                                  title: task['title'],
+                                  subtitle: task['subtitle'],
+                                  isCompleted: task['isCompleted'],
+                                  icon: IconData(task['icon'],
+                                      fontFamily: 'MaterialIcons'),
+                                  onToggleCompletion: (completed) async {
+                                    await _taskService.updateTaskCompletion(
+                                        task['id'], completed);
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _addTask(context),
+        backgroundColor: const Color(0xFFFDCEDF),
+        child: const Icon(
+          FontAwesomeIcons.plus,
+          size: 24,
+          color: Color(0xFFec5091),
+        ),
+      ),
+    );
+  }
+
+  void _addTask(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddTask(
+          initialTitle: '',
+          initialSubtitle: '',
+          initialIcon: Icons.check, // กำหนดค่า icon ที่คุณต้องการ
+          initialStartDate: DateTime.now(), // กำหนดวันที่เริ่มต้น
+          initialEndDate: DateTime.now()
+              .add(Duration(days: 1)),
+          isEditMode: false, // กำหนดวันที่สิ้นสุดเป็นวันถัดไป
+          onSave: (newTask) async {
+            await _taskService.addNewTask({
+              'title': newTask['title'],
+              'subtitle': newTask['subtitle'],
+              'icon': newTask['icon'],
+              'startDate': newTask['startDate'], // ใช้ startDate ที่ส่งกลับ
+              'endDate': newTask['endDate'], // ใช้ endDate ที่ส่งกลับ
+              'date': DateFormat('yyyy-MM-dd HH:mm:ss')
+                  .format(DateTime.now().toLocal()),
+              'isCompleted': false,
+            });
+          },
+        ),
+      ),
+    );
+  }
+}
