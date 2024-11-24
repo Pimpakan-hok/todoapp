@@ -56,7 +56,7 @@ class _CompletedTasksState extends State<CompletedTasks>
         final startOfToday =
             DateTime(today.year, today.month, today.day); // เริ่มต้นวันปัจจุบัน
 
-        final completedTasks = tasks.where((task) {
+         final completedTasks = tasks.where((task) {
           final isCompleted = task['isCompleted'];
           final completedDate = DateTime.parse(task['completedDate'] ??
               task['createdAt']); // ใช้ 'completedDate' แทน 'createdAt' ถ้ามี
@@ -68,7 +68,6 @@ class _CompletedTasksState extends State<CompletedTasks>
               _isTaskRecent(completedDate);
         }).toList();
 
-        // เช็คว่ามี completedTasks หรือไม่
         if (completedTasks.isEmpty) {
           return Center(
             child: Column(
@@ -79,9 +78,9 @@ class _CompletedTasksState extends State<CompletedTasks>
                   child: Transform.translate(
                     offset: Offset(0, -30 * (1 - _animation.value)), // ขยับขึ้น
                     child: Icon(
-                      FontAwesomeIcons.clipboardCheck, // เปลี่ยนไอคอนตามต้องการ
+                      FontAwesomeIcons.clipboardCheck,
                       size: 80,
-                      color: Colors.white, // เปลี่ยนสีไอคอนตามที่ต้องการ
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -89,7 +88,7 @@ class _CompletedTasksState extends State<CompletedTasks>
                 FadeTransition(
                   opacity: _animation,
                   child: Text(
-                    'NO TASK',
+                    'NO COMPLETED TASKS',
                     style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -103,31 +102,30 @@ class _CompletedTasksState extends State<CompletedTasks>
         }
 
         return ListView.builder(
-          padding: EdgeInsets.zero, // ปรับให้ไม่มี Padding รอบ ListView
+          padding: EdgeInsets.zero,
           itemCount: completedTasks.length,
           itemBuilder: (context, index) {
             final task = completedTasks[index];
             return Dismissible(
-              key: Key(task['id'].toString()), // ใช้ key เพื่อระบุแต่ละรายการ
+              key: Key(task['id'].toString()),
               background: Container(
                 decoration: BoxDecoration(
                   color: Colors.red.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(16), // ให้ขอบโค้ง
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: const Icon(
                   FontAwesomeIcons.trash,
                   color: Colors.white,
-                  size: 30, // ขนาดไอคอน
+                  size: 30,
                 ),
               ),
               confirmDismiss: (direction) async {
                 return await _showConfirmDialog(context, task['title']);
               },
               onDismissed: (direction) async {
-                await widget.taskService
-                    .deleteTask(task['id']); // เรียกฟังก์ชันลบงาน
+                await widget.taskService.deleteTask(task['id']);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('${task['title']} deleted')),
                 );
@@ -175,10 +173,9 @@ class _CompletedTasksState extends State<CompletedTasks>
   }
 
   bool _isTaskRecent(DateTime completedDate) {
-    // เช็คว่า Task นี้เสร็จในช่วง 5 นาทีที่แล้วหรือไม่
     final now = DateTime.now();
     final difference = now.difference(completedDate);
-    return difference.inMinutes <= 5; // ถ้าผ่านไปไม่เกิน 5 นาที
+    return difference.inMinutes <= 5;
   }
 
   Future<bool?> _showConfirmDialog(BuildContext context, String title) {
@@ -190,11 +187,11 @@ class _CompletedTasksState extends State<CompletedTasks>
           content: Text('แน่ใจใช่มั้ยว่าจะลบ "$title"?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // ยกเลิกการลบ
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // ยืนยันการลบ
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Delete'),
             ),
           ],
