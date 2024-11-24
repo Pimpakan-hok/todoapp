@@ -56,7 +56,7 @@ class _CompletedTasksState extends State<CompletedTasks>
         final startOfToday =
             DateTime(today.year, today.month, today.day); // เริ่มต้นวันปัจจุบัน
 
-         final completedTasks = tasks.where((task) {
+        final completedTasks = tasks.where((task) {
           final isCompleted = task['isCompleted'];
           final completedDate = DateTime.parse(task['completedDate'] ??
               task['createdAt']); // ใช้ 'completedDate' แทน 'createdAt' ถ้ามี
@@ -73,16 +73,20 @@ class _CompletedTasksState extends State<CompletedTasks>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                FadeTransition(
-                  opacity: _animation,
-                  child: Transform.translate(
-                    offset: Offset(0, -30 * (1 - _animation.value)), // ขยับขึ้น
-                    child: Icon(
-                      FontAwesomeIcons.clipboardCheck,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                  ),
+                AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset:
+                          Offset(0, -30 * (1 - _animation.value)), // ขยับขึ้น
+                      child: Icon(
+                        FontAwesomeIcons
+                            .clipboardCheck, // เปลี่ยนไอคอนตามต้องการ
+                        size: 80,
+                        color: Colors.white, // เปลี่ยนสีไอคอนตามที่ต้องการ
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 FadeTransition(
