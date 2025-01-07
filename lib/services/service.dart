@@ -73,21 +73,30 @@ class TaskService {
     }
   }
 
-  // อัปเดตสถานะการเสร็จสิ้นของงาน และบันทึก historyDate
+// อัปเดตสถานะการเสร็จสิ้นของงาน และบันทึกหรือลบ historyDate
   Future<void> updateTaskCompletion(String taskId, bool isCompleted) async {
     try {
       final now = DateTime.now();
       final historyDate = DateFormat('yyyy-MM-dd')
           .format(now); // สร้างวันที่ปัจจุบันในรูปแบบ yyyy-MM-dd
 
-      // อัปเดตสถานะ isCompleted และบันทึก historyDate
-      await _dbRef.child(taskId).update({
-        'isCompleted': isCompleted,
-        'historyDate': historyDate, // บันทึกวันที่ที่ทำการอัปเดต
-      });
-
-      print(
-          "Task completion status updated to: $isCompleted and historyDate updated to: $historyDate");
+      // ถ้า isCompleted เป็น true ให้บันทึก historyDate
+      if (isCompleted) {
+        await _dbRef.child(taskId).update({
+          'isCompleted': isCompleted,
+          'historyDate': historyDate, // บันทึกวันที่ที่ทำการอัปเดต
+        });
+        print(
+            "Task completion status updated to: $isCompleted and historyDate updated to: $historyDate");
+      } else {
+        // ถ้า isCompleted เป็น false ให้ลบ historyDate
+        await _dbRef.child(taskId).update({
+          'isCompleted': isCompleted,
+          'historyDate': null, // ลบ historyDate
+        });
+        print(
+            "Task completion status updated to: $isCompleted and historyDate removed.");
+      }
     } catch (e) {
       print("Failed to update task: $e");
     }

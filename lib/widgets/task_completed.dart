@@ -59,13 +59,13 @@ class _CompletedTasksState extends State<CompletedTasks>
         final completedTasks = tasks.where((task) {
           final isCompleted = task['isCompleted'];
           final completedDate = DateTime.parse(task['completedDate'] ??
-              task['createdAt']); // ใช้ 'completedDate' แทน 'createdAt' ถ้ามี
+              task['createdAt']); // ใช้ 'completedDate' ถ้ามี
 
-          // เช็คว่าคืองานที่เสร็จในวันนี้หรือก่อนหน้านี้ 1 วัน
+          // กรองแค่ Task ที่เสร็จแล้วและเสร็จเมื่อวานหรือเกิน 1 วัน
+          final isOlderThanOneDay = today.difference(completedDate).inDays > 1;
+
           return isCompleted &&
-              completedDate.isAfter(startOfToday.subtract(Duration(days: 1))) &&
-              completedDate.isBefore(startOfToday.add(Duration(days: 1))) &&
-              _isTaskRecent(completedDate);
+              !isOlderThanOneDay; // ถ้าทำเครื่องหมายเสร็จแล้วและยังไม่เกิน 1 วัน
         }).toList();
 
         if (completedTasks.isEmpty) {

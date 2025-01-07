@@ -46,6 +46,7 @@ class _CalendarListWidgetState extends State<CalendarListWidget>
       return const Center(child: Text('No date selected'));
     }
 
+    // กรองข้อมูลใหม่เมื่อมีการเปลี่ยนแปลงวันที่
     List<Map<String, dynamic>> filteredTasks = widget.tasks.where((task) {
       DateTime startDate = task['startDate'] is String
           ? DateTime.parse(task['startDate'])
@@ -54,18 +55,18 @@ class _CalendarListWidgetState extends State<CalendarListWidget>
           ? DateTime.parse(task['endDate'])
           : task['endDate'];
 
-      // พิมพ์ค่าที่เกี่ยวข้องเพื่อดีบัก
-      print(
-          "Task: ${task['title']}, Start: $startDate, End: $endDate, Completed: ${task['isCompleted']}");
-
-      return (startDate.isBefore(
-                  widget.selectedDate!.add(const Duration(days: 1))) &&
-              endDate.isAfter(widget.selectedDate!) &&
-              task['isCompleted'] == widget.showCompleted) ||
-          (widget.selectedDate!.isAtSameMomentAs(startDate) ||
-              widget.selectedDate!.isAtSameMomentAs(endDate));
+      // กรองตามวันที่และสถานะงาน
+      return startDate.isBefore(widget.selectedDate!.add(Duration(days: 1))) &&
+          endDate.isAfter(widget.selectedDate!) &&
+          task['isCompleted'] == widget.showCompleted;
     }).toList();
 
+    // พิมพ์ข้อมูลเพื่อตรวจสอบ
+    print('Selected date: ${widget.selectedDate}');
+    print('Tasks: ${widget.tasks}');
+    print('Filtered Tasks: $filteredTasks');
+
+    // ตรวจสอบว่าข้อมูลกรองแล้วว่างหรือไม่
     if (filteredTasks.isEmpty) {
       return Center(
         child: Column(
@@ -74,11 +75,11 @@ class _CalendarListWidgetState extends State<CalendarListWidget>
             FadeTransition(
               opacity: _animation,
               child: Transform.translate(
-                offset: Offset(0, -30 * (1 - _animation.value)), // ขยับขึ้น
+                offset: Offset(0, -30 * (1 - _animation.value)),
                 child: Icon(
-                  Icons.warning, // เปลี่ยนไอคอนตามต้องการ
+                  Icons.warning,
                   size: 100,
-                  color: Colors.grey, // เปลี่ยนสีไอคอนตามที่ต้องการ
+                  color: Colors.grey,
                 ),
               ),
             ),
@@ -120,7 +121,8 @@ class _CalendarListWidgetState extends State<CalendarListWidget>
             );
 
             if (updatedTask != null) {
-              // update the UI if necessary
+              // อัปเดต UI เมื่อกลับมาจากหน้ารายละเอียด
+              setState(() {});
             }
           },
           child: Padding(
@@ -133,7 +135,7 @@ class _CalendarListWidgetState extends State<CalendarListWidget>
               icon: IconData(filteredTasks[index]['icon'],
                   fontFamily: 'MaterialIcons'),
               onToggleCompletion: (completed) {},
-              showCheckbox: false, // ซ่อนช่องติ๊กใน CalendarTaskScreen
+              showCheckbox: false,
             ),
           ),
         );

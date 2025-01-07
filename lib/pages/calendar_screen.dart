@@ -34,6 +34,9 @@ class _CalendarTaskScreenState extends State<CalendarTaskScreen> {
   bool showCompleted = false;
   final PanelController _panelController = PanelController();
   final TaskService _taskService = TaskService();
+  DateTime normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 
   @override
   void initState() {
@@ -49,9 +52,39 @@ class _CalendarTaskScreenState extends State<CalendarTaskScreen> {
   }
 
   void _onDateSelected(int day) {
-    print("Selected date: $_currentDate.year, $_currentDate.month, $day");
+    // สร้างวันที่ใหม่จากวันที่ที่เลือก (วันปัจจุบัน + วันที่เลือก)
+    DateTime newSelectedDate =
+        DateTime(_currentDate.year, _currentDate.month, day);
+
+    // อัปเดต _selectedDate และทำการรีเฟรช UI
     setState(() {
-      _selectedDate = DateTime(_currentDate.year, _currentDate.month, day);
+      _selectedDate = newSelectedDate; // กำหนดวันที่ที่เลือกใหม่
+
+      // แสดงวันที่ที่เลือกใน Console
+      print("Selected date: $_selectedDate");
+
+      // แสดงรายชื่อของ tasks ทั้งหมดใน Console
+      print("Tasks: ${widget.tasks}");
+
+      // กรอง task ที่ตรงกับวันที่เลือก (normalize date ให้เป็นแค่วันที่ไม่รวมเวลา)
+      print("Filtered Tasks: ${widget.tasks.where((task) {
+        // ทำการ normalize startDate และ endDate ของแต่ละ task
+        DateTime startDate = normalizeDate(task['startDate']);
+        DateTime endDate = normalizeDate(task['endDate']);
+
+        // normalize selectedDate (วันที่ที่เลือก)
+        DateTime selectedDate = normalizeDate(_selectedDate!);
+
+        // ตรวจสอบว่า selectedDate ตรงกับช่วงระยะเวลา startDate ถึง endDate หรือไม่
+        return (selectedDate
+                    .isAfter(startDate) && // selectedDate อยู่หลัง startDate
+                selectedDate.isBefore(endDate.add(
+                    Duration(days: 1)))) || // selectedDate อยู่ก่อน endDate
+            selectedDate
+                .isAtSameMomentAs(startDate) || // selectedDate ตรงกับ startDate
+            selectedDate
+                .isAtSameMomentAs(endDate); // selectedDate ตรงกับ endDate
+      }).toList()}");
     });
   }
 
@@ -127,17 +160,17 @@ class _CalendarTaskScreenState extends State<CalendarTaskScreen> {
               panelController: _panelController,
               selectedDate: _selectedDate ?? DateTime.now(),
               tasks: widget.tasks.where((task) {
-                DateTime startDate = task['startDate'];
-                DateTime endDate = task['endDate'];
-                // ตรวจสอบว่าวันที่ที่เลือกอยู่ในช่วงวันที่เริ่มต้นและสิ้นสุด
-                return (_selectedDate!.isAfter(startDate) &&
-                        _selectedDate!
-                            .isBefore(endDate.add(Duration(days: 1)))) ||
-                    _selectedDate!.isAtSameMomentAs(startDate) ||
-                    (_selectedDate!.isAtSameMomentAs(endDate) &&
-                       !task['isCompleted']); // เพิ่มเงื่อนไขนี้
-              }).toList(), // กรองเฉพาะงานที่อยู่ในช่วงวันที่ที่เลือก// กรองเฉพาะงานที่อยู่ในช่วงวันที่ที่เลือก
+                // แปลงให้ startDate และ endDate เป็นแค่วันที่ (ไม่รวมเวลา)
+                DateTime startDate = normalizeDate(task['startDate']);
+                DateTime endDate = normalizeDate(task['endDate']);
+                DateTime selectedDate = normalizeDate(_selectedDate!);
 
+                return (selectedDate.isAfter(startDate) &&
+                        selectedDate
+                            .isBefore(endDate.add(Duration(days: 1)))) ||
+                    selectedDate.isAtSameMomentAs(startDate) ||
+                    selectedDate.isAtSameMomentAs(endDate);
+              }).toList(),
               showCompleted: showCompleted,
               onShowCompletedChanged: (value) {
                 print("Show Completed changed to: $value");
